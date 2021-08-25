@@ -12,16 +12,6 @@
         position: relative;
         transform: scale(0.5);
     }
-
-    #item {
-        width: 20px;
-        height: 20px;
-    }
-
-    .showColor {
-        background: black;
-    }
-
 </style>
 <body>
 <div id="box"></div>
@@ -62,11 +52,17 @@
   class gameBox {
     constructor() {
       this.box = document.getElementById('box')
+      this.PointsDom = document.createElement('div')
       this.height = 30
       this.width = 20
+      this.blockWidthHight = 10
+      //计分器
+      this.points = 0
+      this.PointsDom.innerHTML = this.points
+      this.box.insertAdjacentElement('beforebegin', this.PointsDom)
       this.smallBlock = {
-        width: '20px',
-        height: '20px'
+        width: this.blockWidthHight + 'px',
+        height: this.blockWidthHight + 'px'
       }
       this.shoa = []
       this.createBox()
@@ -94,7 +90,7 @@
       for (let n = item.data.length - 1; n >= 0; n--) {
         for (let m = 0; m < item.data[n].length; m++) {
           if (item.data[n][m] === 1) {
-            this.shoa[y][item.x + m].className = 'showColor'
+            this.shoa[y][item.x + m].style.background = 'black'
             this.shoa[y][item.x + m].show = 1
           }
         }
@@ -102,7 +98,6 @@
       }
       this.isSuccessLine()
     }
-
 
     isSuccessLine() {
       this.shoa.forEach((value, index) => {
@@ -118,21 +113,20 @@
             divs.appendChild(div)
             arr.push(div)
           }
-          this.shoa.push(arr)
-          this.box.removeChild(this.shoa[index])
+          this.box.removeChild(this.shoa[index][0].parentNode)
           this.shoa.splice(index, 1)
+          this.box.insertAdjacentElement('afterbegin', divs)
+          this.shoa.unshift(arr)
+          this.points += 10
+          this.PointsDom.innerHTML = this.points
         }
       })
     }
 
     isDownEndLine(item) {
-      const som = item.y + item.list.length >= this.height
-      if (som) return true
+      if (item.y + item.list.length >= this.height) return true
       for (let index = 0; index < item.data.length; index++) {
         let value = item.data[index]
-        if (this.shoa[value + 1] && this.shoa[value + 1][item.x + index].show === 1 && item.y <= 0) {
-          return 'gameOver'
-        }
         if (this.shoa[value + 1] && this.shoa[value + 1][item.x + index].show === 1) {
           return true
         }
@@ -143,7 +137,7 @@
 
   class block {
     constructor() {
-      this.box = $box.box
+      this.blockWidthHight = $box.blockWidthHight
       this.x = 0
       this.y = 0
       this.item = []
@@ -189,19 +183,19 @@
       return $box.isDownEndLine({ x: this.x, y: this.y, data: arr, list: this.item })
     }
 
-
     allDowns() {
-      if (this.getArrEndItem()) {
+      const flag = this.getArrEndItem()
+      if (flag && this.y <= 0) return alert('over')
+      if (flag) {
         this.close = true
         $box.addItems({ x: this.x, y: this.y, data: this.item })
-        this.box.removeChild(this.block)
+        $box.box.removeChild(this.block)
         this.createBlock()
       } else {
         this.ArrowDown()
         setTimeout(this.allDowns.bind(this), this.speed)
       }
     }
-
 
     getBlockRightMargin() {
       let flag = true
@@ -220,9 +214,8 @@
       if (this.x + this.item[0].length === $box.width) return
       if (!this.getBlockRightMargin()) return
       this.x += 1
-      this.block.style.left = this.x * 20 + 'px'
+      this.block.style.left = this.x * this.blockWidthHight + 'px'
     }
-
 
     getBlockLeftMargin() {
       let flag = true
@@ -238,13 +231,13 @@
       if (this.x === 0) return
       if (!this.getBlockLeftMargin()) return
       this.x -= 1
-      this.block.style.left = this.x * 20 + 'px'
+      this.block.style.left = this.x * this.blockWidthHight + 'px'
     }
 
     ArrowDown() {
       if (this.y + this.item.length >= $box.height) return this.close = true
       this.y += 1
-      this.block.style.top = this.y * 20 + 'px'
+      this.block.style.top = this.y * this.blockWidthHight + 'px'
     }
 
     createBlock() {
@@ -260,16 +253,15 @@
     }
 
     create() {
-      this.block.style.width = this.item[0].length * 20 + 'px'
+      this.block.style.width = this.item[0].length * this.blockWidthHight + 'px'
       this.block.style.position = 'absolute'
       this.block.style.display = 'grid'
-      this.block.style.left = `${this.x * 20}px`
+      this.block.style.left = `${this.x * this.blockWidthHight}px`
       this.block.style.gridTemplateColumns = `repeat(${this.item[0].length},1fr)`
       this.block.style.gridTemplateRows = `repeat(${this.item.length},1fr)`
       for (let n = 0; n < this.item.length; n++) {
         this.item[n].forEach(val => {
           let div = document.createElement('div')
-          div.className = 'item'
           Object.assign(div.style, $box.smallBlock)
           div.style.background = val ? 'black' : ''
           this.appendDiv.push(div)
@@ -285,6 +277,7 @@
     }
 
     rotate(arr) {
+      if (this.x + this.item.length > $box.width) this.x -= this.item.length - 2
       this.appendDiv.forEach(val => {this.block.removeChild(val)})
       this.appendDiv = []
       const newArr = []
