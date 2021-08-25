@@ -191,9 +191,7 @@
 
 
     allDowns() {
-      const flag = this.getArrEndItem()
-      if (flag === 'gameOver') return
-      if (flag) {
+      if (this.getArrEndItem()) {
         this.close = true
         $box.addItems({ x: this.x, y: this.y, data: this.item })
         this.box.removeChild(this.block)
