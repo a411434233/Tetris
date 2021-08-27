@@ -4,13 +4,11 @@
     <meta charset="UTF-8">
     <title>Title</title>
 </head>
+
 <style>
-    #box {
-        width: 400px;
-        height: 600px;
-        border: solid 1px;
-        position: relative;
-        transform: scale(0.5);
+    * {
+        margin: 0;
+        padding: 0;
     }
 </style>
 <body>
@@ -18,51 +16,76 @@
 </body>
 <script>
   const customBlock = {
-    '1': [
-      [1, 1],
-      [1, 1]
-    ],
-    '2': [
-      [1, 1, 0],
-      [0, 1, 1]
-    ],
-    '3': [
-      [0, 1, 1],
-      [1, 1, 0]
-    ],
-    '4': [
-      [1, 1, 1, 1]
-    ],
-    '5': [
-      [1, 1],
-      [0, 1],
-      [0, 1]
-    ],
-    '6': [
-      [1, 1],
-      [1, 0],
-      [1, 0]
-    ],
-    '7': [
-      [0, 1, 0],
-      [1, 1, 1]
-    ]
+    '1': {
+      data: [
+        [1, 1],
+        [1, 1]
+      ],
+      color: '#7FFF00',
+    },
+    '2': {
+      data: [
+        [1, 1, 0],
+        [0, 1, 1]
+      ],
+      color: '#D2691E'
+    },
+    '3': {
+      data: [
+        [0, 1, 1],
+        [1, 1, 0]
+      ],
+      color: '#6495ED'
+    },
+    '4': {
+      data: [
+        [1, 1, 1, 1]
+      ],
+      color: '#DC143C'
+    },
+    '5': {
+      data: [
+        [1, 1],
+        [0, 1],
+        [0, 1]
+      ],
+      color: '#D87093'
+    },
+    '6': {
+      data: [
+        [1, 1],
+        [1, 0],
+        [1, 0]
+      ],
+      color: '#8470FF'
+    },
+    '7': {
+      data: [
+        [0, 1, 0],
+        [1, 1, 1]
+      ],
+      color: '#A0522D'
+    }
   }
 
   class gameBox {
     constructor() {
+      this.width = 10 //宽个数
+      this.height = 20 //长个数
+      this.blockWidthHight = 10 //方块宽高大小px 为正方形
       this.box = document.getElementById('box')
-      this.PointsDom = document.createElement('div')
-      this.height = 30
-      this.width = 20
-      this.blockWidthHight = 10
+      this.box.style.border = 'solid 1px'
+      this.box.style.position = 'relative'
+      this.box.style.width = `${this.width * this.blockWidthHight}px`
+      this.box.style.height = `${this.height * this.blockWidthHight}px`
       //计分器
       this.points = 0
+      this.PointsDom = document.createElement('div')
       this.PointsDom.innerHTML = this.points
       this.box.insertAdjacentElement('beforebegin', this.PointsDom)
       this.smallBlock = {
-        width: this.blockWidthHight + 'px',
-        height: this.blockWidthHight + 'px'
+        width: `${this.blockWidthHight}px`,
+        height: `${this.blockWidthHight}px`
       }
       this.shoa = []
       this.createBox()
@@ -90,7 +113,7 @@
       for (let n = item.data.length - 1; n >= 0; n--) {
         for (let m = 0; m < item.data[n].length; m++) {
           if (item.data[n][m] === 1) {
-            this.shoa[y][item.x + m].style.background = 'black'
+            this.shoa[y][item.x + m].style.background = item.color
             this.shoa[y][item.x + m].show = 1
           }
         }
@@ -127,9 +150,7 @@
       if (item.y + item.list.length >= this.height) return true
       for (let index = 0; index < item.data.length; index++) {
         let value = item.data[index]
-        if (this.shoa[value + 1] && this.shoa[value + 1][item.x + index].show === 1) {
-          return true
-        }
+        if (this.shoa[value + 1] && this.shoa[value + 1][item.x + index].show === 1) return true
       }
       return false
     }
@@ -138,9 +159,7 @@
   class block {
     constructor() {
       this.blockWidthHight = $box.blockWidthHight
-      this.x = 0
-      this.y = 0
-      this.item = []
+      this.itemData = []
       this.close = false
       this.speed = 1000
       this.createBlock()
@@ -149,7 +168,7 @@
         if (this.getArrEndItem()) return this.close = true
         // 旋转90
         if (e.code === 'Space') {
-          this.rotate(this.item)
+          this.rotate(this.itemData)
         }
         //右移动一格
         if (e.code === 'ArrowRight') {
@@ -167,20 +186,20 @@
     }
 
     getArrEndItem() {
-      let arrEndItem = JSON.parse(JSON.stringify(this.item[this.item.length - 1]))
-      let arr = new Array(arrEndItem.length).fill(this.y + this.item.length - 1)
+      let arrEndItem = JSON.parse(JSON.stringify(this.itemData[this.itemData.length - 1]))
+      let arr = new Array(arrEndItem.length).fill(this.y + this.itemData.length - 1)
       for (let n = 0; n < arrEndItem.length; n++) {
         if (arrEndItem[n] === 0) {
-          let index = this.item.length - 1
+          let index = this.itemData.length - 1
           while (arrEndItem[n] === 0) {
             index -= 1
             arr[n] -= 1
-            arrEndItem[n] = this.item[index][n]
-            if (index < 0) return
+            arrEndItem[n] = this.itemData[index][n]
+            if (index < 0) break
           }
         }
       }
-      return $box.isDownEndLine({ x: this.x, y: this.y, data: arr, list: this.item })
+      return $box.isDownEndLine({ x: this.x, y: this.y, data: arr, list: this.itemData })
     }
 
     allDowns() {
@@ -188,7 +207,7 @@
       if (flag && this.y <= 0) return alert('over')
       if (flag) {
         this.close = true
-        $box.addItems({ x: this.x, y: this.y, data: this.item })
+        $box.addItems({ x: this.x, y: this.y, data: this.itemData, color: this.item.color })
         $box.box.removeChild(this.block)
         this.createBlock()
       } else {
@@ -199,9 +218,9 @@
 
     getBlockRightMargin() {
       let flag = true
-      for (let index = 0; index < this.item.length; index++) {
-        let rightIndex = this.item[index].length - 1
-        while (this.item[index][rightIndex] !== 1) {
+      for (let index = 0; index < this.itemData.length; index++) {
+        let rightIndex = this.itemData[index].length - 1
+        while (this.itemData[index][rightIndex] !== 1) {
           rightIndex -= 1
           if (rightIndex === 0) break
         }
@@ -211,7 +230,7 @@
     }
 
     toRight() {
-      if (this.x + this.item[0].length === $box.width) return
+      if (this.x + this.itemData[0].length === $box.width) return
       if (!this.getBlockRightMargin()) return
       this.x += 1
       this.block.style.left = this.x * this.blockWidthHight + 'px'
@@ -219,10 +238,10 @@
 
     getBlockLeftMargin() {
       let flag = true
-      for (let index = 0; index < this.item.length; index++) {
-        let itemArr = this.item[index]
+      for (let index = 0; index < this.itemData.length; index++) {
+        let itemArr = this.itemData[index]
         let leftIndex = itemArr.findIndex(value => value === 1)
-        if ($box.shoa[this.y + index][this.x - (leftIndex - 1)].show === 1) flag = false
+        if ($box.shoa[this.y + index][this.x + leftIndex - 1].show === 1) flag = false
       }
       return flag
     }
@@ -235,17 +254,22 @@
     }
 
     ArrowDown() {
-      if (this.y + this.item.length >= $box.height) return this.close = true
+      if (this.y + this.itemData.length >= $box.height) {
+        setTimeout(() => this.close = true, 400)
+        return
+      }
       this.y += 1
       this.block.style.top = this.y * this.blockWidthHight + 'px'
     }
 
     createBlock() {
-      this.block = document.createElement('div')
-      this.appendDiv = []
-      this.x = 8
       this.y = 0
-      this.item = this.getItem()
+      this.x = Math.ceil($box.width / 2)
+      this.block = document.createElement('div')
+      this.block.style.top = `${this.y * this.blockWidthHight}px`
+      this.appendDiv = []
+      this.item = block.#getItem()
+      this.itemData = this.item.data
       this.create()
       $box.box.appendChild(this.block)
       this.close = false
@@ -253,31 +277,37 @@
     }
 
     create() {
-      this.block.style.width = this.item[0].length * this.blockWidthHight + 'px'
+      this.block.style.width = this.itemData[0].length * this.blockWidthHight + 'px'
       this.block.style.position = 'absolute'
       this.block.style.display = 'grid'
       this.block.style.left = `${this.x * this.blockWidthHight}px`
-      this.block.style.gridTemplateColumns = `repeat(${this.item[0].length},1fr)`
-      this.block.style.gridTemplateRows = `repeat(${this.item.length},1fr)`
-      for (let n = 0; n < this.item.length; n++) {
-        this.item[n].forEach(val => {
-          let div = document.createElement('div')
+      this.block.style.gridTemplateColumns = `repeat(${this.itemData[0].length},1fr)`
+      this.block.style.gridTemplateRows = `repeat(${this.itemData.length},1fr)`
+      for (let n = 0; n < this.itemData.length; n++) {
+        this.itemData[n].forEach(val => {
+          const div = document.createElement('div')
           Object.assign(div.style, $box.smallBlock)
-          div.style.background = val ? 'black' : ''
+          div.style.background = val ? this.item.color : ''
+          // div.style.border = val ? `solid 0.5px black` : ''
+          div.style.transition = 'none'
           this.appendDiv.push(div)
           this.block.appendChild(div)
         })
       }
+      //延迟0执行
+      setTimeout(() => {this.block.style.transition = 'all 0.3s'}, 0)
     }
 
-    getItem() {
+    static #getItem() {
       const config = Object.keys(customBlock)
       const index = parseInt((Math.random() * config.length + 1).toString())
       return customBlock[index]
     }
 
     rotate(arr) {
-      if (this.x + this.item.length > $box.width) this.x -= this.item.length - 2
+      //防止旋转之后超出框盒子
+      this.block.style.transition = 'all 0s'
+      if (this.x + this.itemData.length > $box.width) this.x -= this.itemData.length - 1
       this.appendDiv.forEach(val => {this.block.removeChild(val)})
       this.appendDiv = []
       const newArr = []
@@ -286,12 +316,13 @@
         for (let m = arr.length - 1; m >= 0; m--) arr2.push(arr[m][n])
         newArr.push(arr2)
       }
-      this.item = newArr
+      this.itemData = newArr
       this.create()
     }
   }
 
   const $box = new gameBox()
   new block()
+
 </script>
 </html>
